@@ -13,7 +13,7 @@ while(True):
         # Read serial data
         s = ser.readline()
         s = s.decode("utf-8")
-
+        ser.write(b'hi')
         print(s)
     # Allow program to be manually stopped
     except KeyboardInterrupt:
