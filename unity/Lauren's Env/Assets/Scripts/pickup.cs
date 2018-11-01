@@ -1,15 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 public class pickup : MonoBehaviour {
-    public bool downcoltip;
-    public bool downcolmid;
-    public bool downcolback;
-    public bool downcolknuckle;
 
-    //public bool upcoltip;
-    //public bool upcolback;
     public bool[] index;
     public bool[] thumb;
     GameObject heldObject;
@@ -17,10 +12,47 @@ public class pickup : MonoBehaviour {
     GameObject stuck;
     Rigidbody simulator;
 
-    void Update()
+    [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
+    private static extern short GetKeyState(int keyCode);
+
+    [DllImport("user32.dll")]
+    private static extern int GetKeyboardState(byte[] lpKeyState);
+
+    [DllImport("user32.dll", EntryPoint = "keybd_event")]
+    private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+    //sets the values for the capslock key and keyevents
+    private const byte VK_CAPSLOCK = 0x14;
+    private const uint KEYEVENTF_EXTENDEDKEY = 1;
+    private const int KEYEVENTF_KEYUP = 0x2;
+    private const int KEYEVENTF_KEYDOWN = 0x0;
+
+    // gets the current state of the capslock key and returns it as a boolean
+    public static bool GetCapsLock()
     {
-        RaycastHit hit;
-        float distance;
+        return (((ushort)GetKeyState(0x14)) & 0xffff) != 0;
+    }
+
+    // sets the current state of the capslock key
+    public static void SetCapsLock(bool bState)
+    {
+        if (GetCapsLock() != bState)
+        {
+            keybd_event(VK_CAPSLOCK, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYDOWN, 0);
+            keybd_event(VK_CAPSLOCK, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+        }
+    }
+    void Start()
+    {
+        //makes sure capslock is off at the start of the program
+        if (GetCapsLock()) {
+            pickup.SetCapsLock(false);
+        }
+    }
+
+    void Update()
+    {   
+
         thumb=new bool[6] ;
         index = new bool[10];
 
@@ -51,22 +83,14 @@ public class pickup : MonoBehaviour {
         index[9] = GameObject.Find("knuckle").GetComponent<Handcolide>().downcol;
        
 
-        //print("stuff " + "pos " + transform.position + "found " + foundedge);
-        // saves the transform at which i ran into the colider for the box
-        /* if ((upcoltip == true || upcolback == true))
-         {
-             print("stuf");
-         }*/
-
-        foreach (bool indhit in index) { 
-        
+        foreach (bool indhit in index) {
                 if (indhit == true )
-                {
+                {print("hit index");
 
-                    foreach (bool thumbhit in thumb){
+                foreach (bool thumbhit in thumb){
                         if (thumbhit==true)
                         {
-                                print("hit");
+                            print("hit thumb");
                             Collider[] cols = Physics.OverlapSphere(transform.position, 0.1f);
 
                             stickto = GameObject.Find("placeholder");
@@ -75,66 +99,81 @@ public class pickup : MonoBehaviour {
 
                             // checks to see if each of those objects are already a held object
 
-
                             // looks through all of the coliders in the script
                             foreach (Collider col in cols)
                             {
                                 if (heldObject == null && col.GetComponent<HeldObject>() && col.GetComponent<HeldObject>().parent == null)
 
                                 {
-                                    print("stuck");
+                                    print("object grasped");
                                     // assignes the desired one to be a gameobject   
                                     heldObject = col.gameObject;
                                     // assignes the object to be a child of my placeholder aka a child of the hand collider
                                     heldObject.transform.parent = stickto.transform;
                                     // gets rid of gravity etc on the object
                                     heldObject.GetComponent<Rigidbody>().isKinematic = true;
+                                    // sets capslock to be true
+                                    // the state of capslock will determine if the device is locked or not
+                                    pickup.SetCapsLock(true);
                                     break;
                                 }
 
                             }// end foreach
 
-
-                            //print("i am at" + transform.position);
-                            //print("index");
-                            //print( hit.collider.gameObject.name);
-                            //print("found endge at a distance of : "+ distance);
                             break;
                         } // end if
             
-
                         else if (thumbhit ==false)
                         {
                             if (heldObject != null)
-                            {
+                            {                             
                                 heldObject.transform.parent = null;
                                 heldObject.GetComponent<Rigidbody>().isKinematic = false;
                                 heldObject = null;
-                                print("hi");
+                                print("no thumb hit");
                             }
                         }// end else if
-                    
                     }
-
                     break;
                 }
-
-            else if (indhit == false )
+        }
+ 
+        int total_index_false = 0;
+        int total_thumb_false = 0;
+        // checks to see how many of the index colliders are false
+        for (int x = 0; x < index.Length; x++) {
+            if (index[x] == false)
             {
-                if (heldObject != null)
-                {
-                    heldObject.transform.parent = null;
-                    heldObject.GetComponent<Rigidbody>().isKinematic = false;
-                    heldObject = null;
-                    print("hi");
-                }
-                // assignes the object to be a child of my placeholder aka a child of the hand collider
-                //heldObject.transform.parent = stuck.transform;
-                // gets rid of gravity etc on the object
-                //heldObject.GetComponent<Rigidbody>().isKinematic = false;
-
+                total_index_false++;
             }
         }
+
+        // checks how many of the thumb colliders are false 
+        for (int x = 0; x < thumb.Length; x++)
+        {
+            if (thumb[x] == false)
+            {
+                total_thumb_false++;
+            }
+        }
+
+        if (total_index_false == index.Length || total_thumb_false == thumb.Length) {
+            if (heldObject != null)
+            {
+                // turns capslock off 
+                if (GetCapsLock())
+                {
+                    pickup.SetCapsLock(false);
+                }
+                // sets the parent of the object to be none and turns on gravity etc
+                heldObject.transform.parent = null;
+                heldObject.GetComponent<Rigidbody>().isKinematic = false;
+                heldObject = null;
+                print("no index hit");
+            }
+        }
+
+
 
         // checking if my current transform is within the bounds of the box
         // if (Vector3.Distance(transform.position, foundedge) < .5f)

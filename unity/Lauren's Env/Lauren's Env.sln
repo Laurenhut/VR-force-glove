@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lauren's Env", "Assembly-CSharp.csproj", "{FA4CEE6A-4EB5-9FF7-2D5B-5512C645BA88}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{FA4CEE6A-4EB5-9FF7-2D5B-5512C645BA88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lauren's Env", "Assembly-CSharp-Editor.csproj", "{B264ED7A-0F94-20EF-FC4D-6521D976759D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{B264ED7A-0F94-20EF-FC4D-6521D976759D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
