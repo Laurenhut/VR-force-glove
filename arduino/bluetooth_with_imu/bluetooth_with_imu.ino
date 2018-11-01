@@ -1,19 +1,4 @@
-/* MPU9250 Basic Example Code
- by: Kris Winer
- date: April 1, 2014
- license: Beerware - Use this code however you'd like. If you
- find it useful you can buy me a beer some time.
- Modified by Brent Wilkins July 19, 2016
-
- Demonstrate basic MPU-9250 functionality including parameterizing the register
- addresses, initializing the sensor, getting properly scaled accelerometer,
- gyroscope, and magnetometer data out. Added display functions to allow display
- to on breadboard monitor. Addition of 9 DoF sensor fusion using open source
- Madgwick and Mahony filter algorithms. Sketch runs on the 3.3 V 8 MHz Pro Mini
- and the Teensy 3.1.
-
- SDA and SCL should have external pull-up resistors (to 3.3V).
- 10k resistors are on the EMSENSR-9250 breakout board.
+/*
 
  Hardware setup:
  MPU9250 Breakout --------- Arduino
@@ -38,13 +23,15 @@ SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 // Pin definitions
 int intPin = 12;  // These can be changed, 2 and 3 are the Arduinos ext int pins
 int myLed  = 13;  // Set up pin 13 led for toggling
+const int FSR_PIN = A0; // Pin connected to FSR/resistor divider
+const float VCC = 4.98; // Measured voltage of Ardunio 5V line
+const float R_DIV = 3230.0; // Measured resistance of 3.3k resistor
 
 MPU9250 myIMU;
 
 void setup()
 {
   Wire.begin();
-  // TWBR = 12;  // 400 kbit/sec I2C speed
   Serial.begin(9600);
 
   // setsup bluetooth communications
@@ -54,7 +41,6 @@ void setup()
   bluetooth.print("$");  // Enter command mode
   delay(100);  // Short delay, wait for the Mate to send back CMD
   bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
-  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
   bluetooth.begin(9600);  // Start bluetooth serial at 9600
 
   // Set up the interrupt pin, its set as active high, push-pull
@@ -62,6 +48,9 @@ void setup()
   digitalWrite(intPin, LOW);
   pinMode(myLed, OUTPUT);
   digitalWrite(myLed, HIGH);
+
+  // input pin for the forse sensor 
+  pinMode(FSR_PIN, INPUT);
 
   // Read the WHO_AM_I register, this is a good test of communication
   byte c = myIMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
@@ -71,21 +60,6 @@ void setup()
   if (c == 0x71) // WHO_AM_I should always be 0x68
   {
     Serial.println("MPU9250 is online...");
-
-    // Start by performing self test and reporting values
-    myIMU.MPU9250SelfTest(myIMU.SelfTest);
-    Serial.print("x-axis self test: acceleration trim within : ");
-    Serial.print(myIMU.SelfTest[0],1); Serial.println("% of factory value");
-    Serial.print("y-axis self test: acceleration trim within : ");
-    Serial.print(myIMU.SelfTest[1],1); Serial.println("% of factory value");
-    Serial.print("z-axis self test: acceleration trim within : ");
-    Serial.print(myIMU.SelfTest[2],1); Serial.println("% of factory value");
-    Serial.print("x-axis self test: gyration trim within : ");
-    Serial.print(myIMU.SelfTest[3],1); Serial.println("% of factory value");
-    Serial.print("y-axis self test: gyration trim within : ");
-    Serial.print(myIMU.SelfTest[4],1); Serial.println("% of factory value");
-    Serial.print("z-axis self test: gyration trim within : ");
-    Serial.print(myIMU.SelfTest[5],1); Serial.println("% of factory value");
 
     // Calibrate gyro and accelerometers, load biases in bias registers
     myIMU.calibrateMPU9250(myIMU.gyroBias, myIMU.accelBias);
@@ -104,16 +78,7 @@ void setup()
     myIMU.initAK8963(myIMU.magCalibration);
     // Initialize device for active mode read of magnetometer
     Serial.println("AK8963 initialized for active data mode....");
-  
-    //  Serial.println("Calibration values: ");
-    Serial.print("X-Axis sensitivity adjustment value ");
-    Serial.println(myIMU.magCalibration[0], 2);
-    Serial.print("Y-Axis sensitivity adjustment value ");
-    Serial.println(myIMU.magCalibration[1], 2);
-    Serial.print("Z-Axis sensitivity adjustment value ");
-    Serial.println(myIMU.magCalibration[2], 2);
-
-    
+   
   } // if (c == 0x71)
   else
   {
@@ -123,20 +88,38 @@ void setup()
   }
 }
 
-void loop()
-{
-    // checks if the bluetooth sent any characters
-    if(bluetooth.available())  // If ths bluetooth sent any characters
-  {
-    // Send any characters the bluetooth prints to the serial monitor
-    blue = bluetooth.read();
-    if (blue== 7){
-       Serial.print(blue);  
+float force_sensor_value(){
+  //checks the force on the force sensor and returns the result 
+  
+    int fsrADC = analogRead(FSR_PIN);
+    if (fsrADC != 0) // If the analog reading is non-zero
+    {
+      // Use ADC reading to calculate voltage:
+      float fsrV = fsrADC * VCC / 1023.0;
+      // Use voltage and static resistor value to 
+      // calculate FSR resistance:
+      float fsrR = R_DIV * (VCC / fsrV - 1.0);
+      // Guesstimate force based on slopes in figure 3 of
+      // FSR datasheet:
+      float force;
+      float fsrG = 1.0 / fsrR; // Calculate conductance
+      // Break parabolic curve down into two linear slopes:
+      if (fsrR <= 600) 
+        force = (fsrG - 0.00075) / 0.00000032639;
+      else
+        force =  fsrG / 0.000000642857;
+      Serial.println("Force: " + String(force) + " g");
+      Serial.println();
+      return force; 
+    }
+    else{
+      return 0; 
       }
-   
-  }
+}
 
-
+float imu_data(){
+    // checks the value of the imu raw
+  
   // If intPin goes high, all data registers have new data
   // On interrupt, check if data ready interrupt
   if (myIMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
@@ -181,22 +164,15 @@ void loop()
                myIMU.magbias[2];
   } // if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
 
+  // converts from quaternians to euler
+  
   // Must be called before updating quaternions!
   myIMU.updateTime();
-
-  // Sensors x (y)-axis of the accelerometer is aligned with the y (x)-axis of
-  // the magnetometer; the magnetometer z-axis (+ down) is opposite to z-axis
-  // (+ up) of accelerometer and gyro! We have to make some allowance for this
-  // orientationmismatch in feeding the output to the quaternion filter. For the
-  // MPU-9250, we have chosen a magnetic rotation that keeps the sensor forward
-  // along the x-axis just like in the LSM9DS0 sensor. This rotation can be
-  // modified to allow any convenient orientation convention. This is ok by
-  // aircraft orientation standards! Pass gyro rate as rad/s
+  
 //  MadgwickQuaternionUpdate(ax, ay, az, gx*PI/180.0f, gy*PI/180.0f, gz*PI/180.0f,  my,  mx, mz);
   MahonyQuaternionUpdate(myIMU.ax, myIMU.ay, myIMU.az, myIMU.gx*DEG_TO_RAD,
                          myIMU.gy*DEG_TO_RAD, myIMU.gz*DEG_TO_RAD, myIMU.my,
                          myIMU.mx, myIMU.mz, myIMU.deltat);
-
 
     // Serial print and/or display at 0.5 s rate independent of data rates
     myIMU.delt_t = millis() - myIMU.count;
@@ -205,22 +181,6 @@ void loop()
     if (myIMU.delt_t > 500)
     {
    
-// Define output variables from updated quaternion---these are Tait-Bryan
-// angles, commonly used in aircraft orientation. In this coordinate system,
-// the positive z-axis is down toward Earth. Yaw is the angle between Sensor
-// x-axis and Earth magnetic North (or true North if corrected for local
-// declination, looking down on the sensor positive yaw is counterclockwise.
-// Pitch is angle between sensor x-axis and Earth ground plane, toward the
-// Earth is positive, up toward the sky is negative. Roll is angle between
-// sensor y-axis and Earth ground plane, y-axis up is positive roll. These
-// arise from the definition of the homogeneous rotation matrix constructed
-// from quaternions. Tait-Bryan angles as well as Euler angles are
-// non-commutative; that is, the get the correct orientation the rotations
-// must be applied in the correct order which for this configuration is yaw,
-// pitch, and then roll.
-// For more see
-// http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-// which has additional links.
       myIMU.yaw   = atan2(2.0f * (*(getQ()+1) * *(getQ()+2) + *getQ() *
                     *(getQ()+3)), *getQ() * *getQ() + *(getQ()+1) * *(getQ()+1)
                     - *(getQ()+2) * *(getQ()+2) - *(getQ()+3) * *(getQ()+3));
@@ -242,17 +202,30 @@ void loop()
       Serial.print(myIMU.pitch, 2);
       Serial.print(", ");
       Serial.println(myIMU.roll, 2);
+      
       //sends a value through bluetooth
       bluetooth.println(myIMU.roll);
       
-//      Serial.print("rate = ");
-//      Serial.print((float)myIMU.sumCount/myIMU.sum, 2);
-//      Serial.println(" Hz");
-
-
       myIMU.count = millis();
       myIMU.sumCount = 0;
       myIMU.sum = 0;
     } // if (myIMU.delt_t > 500)
+    return myIMU.roll;
+  }
+void loop()
+{
+
+  // checks if the bluetooth sent any characters
+    if(bluetooth.available())  // If ths bluetooth sent any characters
+  {
+    // prints out the values sent by the bluetooth module
+    blue = bluetooth.read();
+    if (blue== 1 || blue== 0){
+       Serial.print(blue);  
+       //sends commsnd to lock the glove locks the glove
+      }
+  }
+   bluetooth.println(force_sensor_value());
+   bluetooth.println(imu_data());
 
 }
