@@ -4,8 +4,10 @@ import sys
 import pyxinput
 import time
 import struct
+from win32api import GetKeyState
+from win32con import VK_CAPITAL
 # starts serial communications on the bluetooth port
-ser = serial.Serial('COM11', 9600, timeout=1)
+ser = serial.Serial('COM15', 9600, timeout=1)
 print("\nConnected")
 
 MyVirtual = pyxinput.vController()
@@ -22,14 +24,11 @@ while(True):
             print(thumb)
             MyVirtual.set_value('AxisLx', thumb)
             print(MyRead.gamepad)
-        ser.write(struct.pack('>B',7))
-        # if inp == "a":
-        #     MyVirtual.set_value('AxisLx', thumb)
-        #     inp ="s"
-        # elif inp == "s":
-        #     MyVirtual.set_value('AxisLx', -32767)
-            # inp ="a"
-        # print(MyRead.buttons)
+        # checks to see if the current capslock state is duplicated
+        capslock_state = GetKeyState(VK_CAPITAL)
+        if capslock_state != capslock_state_previous:
+            ser.write(struct.pack('>B',capslock_state))
+            capslock_state_previous = capslock_state
     # Allow program to be manually stopped
     except KeyboardInterrupt:
         print("Keyboard Interrupt")
