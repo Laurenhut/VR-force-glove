@@ -36,7 +36,7 @@ MPU9250 myIMU;
 void setup()
 {
   myservo.attach(SERVO_PIN_A);  // attaches the servo on pin 9 to the servo object
-  myservo.write(45); 
+  myservo.write(50); 
   Wire.begin();
   Serial.begin(9600);
 
@@ -180,10 +180,10 @@ float imu_data(){
   // Must be called before updating quaternions!
   myIMU.updateTime();
   
-//  MadgwickQuaternionUpdate(ax, ay, az, gx*PI/180.0f, gy*PI/180.0f, gz*PI/180.0f,  my,  mx, mz);
+ // MadgwickQuaternionUpdate(myIMU.ax, myIMU.ay, myIMU.az, myIMU.gx*PI/180.0f, myIMU.gy*PI/180.0f, myIMU.gz*PI/180.0f,  myIMU.mx,  myIMU.my, myIMU.mz, myIMU.deltat);
   MahonyQuaternionUpdate(myIMU.ax, myIMU.ay, myIMU.az, myIMU.gx*DEG_TO_RAD,
-                         myIMU.gy*DEG_TO_RAD, myIMU.gz*DEG_TO_RAD, myIMU.my,
-                         myIMU.mx, myIMU.mz, myIMU.deltat);
+                         myIMU.gy*DEG_TO_RAD, myIMU.gz*DEG_TO_RAD, myIMU.mx,
+                         myIMU.my, myIMU.mz, myIMU.deltat);
 
     // Serial print and/or display at 0.5 s rate independent of data rates
     myIMU.delt_t = millis() - myIMU.count;
@@ -208,9 +208,13 @@ float imu_data(){
       myIMU.roll  *= RAD_TO_DEG;
 
 //      Serial.print("yaw: ");
-//      Serial.println(myIMU.yaw, 2);
-    //Serial.print("pitch: ");
-    //Serial.println(myIMU.pitch+180, 2);
+//    Serial.print("roll:");
+//    Serial.println(myIMU.roll+180, 2);
+//    Serial.print("pitch:");
+//    Serial.println(myIMU.pitch+180, 2);
+//    Serial.print("yaw: ");
+//    Serial.println(myIMU.yaw+180, 2);
+//    Serial.println(" ");
 //      Serial.print("roll: ");
 //      Serial.println(myIMU.roll, 2);
 //      Serial.println(" ");
@@ -242,6 +246,8 @@ void  change_motor(int current_position){
       }
 
   }
+
+  
   struct Data {
   float bottom, top;
 };
@@ -285,6 +291,7 @@ void loop()
       Serial.println((imu_offset- stuff.bottom)/(stuff.top-stuff.bottom));
       start =false;
     }
+
   // checks if the bluetooth sent any characters
     if(bluetooth.available())  // If ths bluetooth sent any characters
   {
@@ -296,8 +303,7 @@ void loop()
   }
 //  //sends a value through bluetooth
 //   //bluetooth.println(force_sensor_value());
-//   Serial.println(imu_data());
-    Serial.println((imu_data()- stuff.bottom)/(stuff.top-stuff.bottom));
+    //Serial.println((imu_data()- stuff.bottom)/(stuff.top-stuff.bottom));
    bluetooth.println((imu_data()- stuff.bottom)/(stuff.top-stuff.bottom) );
    delay(10);
 

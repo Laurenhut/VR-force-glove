@@ -25,10 +25,13 @@ while(True):
             .15
             -.19
             thumb = float(s)
-            # if thumb < 0.0:
-            #     thumb = thumb* -0.0
-            print(thumb)
-            MyVirtual.set_value('AxisLy', thumb*-1)
+            if thumb < 0.0:
+                thumb = 0.0
+            elif thumb > 1.0:
+                thumb = 1.0
+            #print(((thumb*1)/4)+.75)
+
+            MyVirtual.set_value('AxisLy', ((thumb/4)+.75)*-1)
             #print(MyRead.gamepad)
         # checks to see if the current capslock state is duplicated
         capslock_state = GetKeyState(VK_CAPITAL)
@@ -39,7 +42,7 @@ while(True):
             ser.write(struct.pack('>B',capslock_state))
             time.sleep(1)
             J = ser.readline()
-            count += 1
+            #count += 1
             # print("rec")
             # print(J)
         elif count == 2 and capslock_state == capslock_state_previous and capslock_state >= 0:
