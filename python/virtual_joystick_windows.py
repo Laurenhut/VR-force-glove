@@ -21,15 +21,12 @@ while(True):
         s = ser.readline()
         q = s.decode("utf-8")
         if q !='' and q != 0:
-            print("in")
-            .15
-            -.19
             thumb = float(s)
             if thumb < 0.0:
                 thumb = 0.0
             elif thumb > 1.0:
-                thumb = 1.0
-            #print(((thumb*1)/4)+.75)
+                thumb = 0.0
+            print(((thumb/4)+.75))
 
             MyVirtual.set_value('AxisLy', ((thumb/4)+.75)*-1)
             #print(MyRead.gamepad)
