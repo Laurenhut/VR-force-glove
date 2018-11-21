@@ -39,7 +39,7 @@ const float R_DIV = 3230.0; // Measured resistance of 3.3k resistor
 void setup()
 {
   myservo.attach(SERVO_PIN_A);  // attaches the servo on pin 9 to the servo object
-  myservo.write(50);
+  myservo.write(45);
  
   Serial.begin(9600);
 
@@ -80,6 +80,7 @@ float force_sensor_value(){
       return force;
     }
     else{
+
       return 0;
       }
 }
@@ -88,70 +89,135 @@ float force_sensor_value(){
 float pot_data()
 {
     float val = analogRead(potPin);
-    return val/1023.0;
+
+    return val;
   }
 
 void  change_motor(int current_position)
 {
       // freewheeling position
-     if (current_position == 1)
+     if (current_position == true)
      {
-        for (pos = 45; pos <= 110; pos += 1) 
-        {
-          myservo.write(pos);
-          delay(15); 
-        }
+        myservo.write(110);
       }
      //locked position
      else
      {
-        for (pos = 110; pos >= 45; pos -= 1) 
-        {
-          myservo.write(pos);
-          delay(15);
-        }
+        myservo.write(45);
+
       }
 
   }
 
+struct Data
+  {
+    int bottom, top; 
+  };
+
+struct Data calibrate()
+  {
+    int var =0;
+    int var2 = 0; 
+    int bottom, top; 
+     
+    Serial.println("calibrating hold at bottom for 5s");
+           delay(5000); 
+  
+    bottom = pot_data();  
+  
+    Serial.println("calibrating hold at top for 5s");
+    delay(5000); 
+    
+    top = pot_data(); 
+    Serial.println("done calibrating");
+    return {bottom, top};
+  }
 
 bool glove_locked = false;
 float frozen_position; 
+struct Data cal;
+bool start = true; 
+float position_pot; 
+
 void loop()
 {
-
+    if (start == true){  
+      cal =calibrate();   
+      Serial.println(cal.bottom); 
+      Serial.println(cal.top);  
+      start =false; 
+    }
+   
   // checks if the bluetooth sent signal to lock the glove
     if(bluetooth.available())  // If ths bluetooth sent any characters
   {
     // prints out the values sent by the bluetooth module
     blue = bluetooth.read();
-    change_motor(blue);
+    Serial.println(char(blue));
     
-    // if the motor is locked pay attention to the force sensor 
-    if(blue != 1)
-    {
-      glove_locked = true; 
-      pot_data() = frozen_position; 
-    }
+    if(char(blue) == "1")
+      {
+        Serial.println("locking: ");
+        glove_locked = true; 
+  
+      }
+    else if (char(blue)== "0")
+      {
+        Serial.println("unlocking ");
+        glove_locked = false; 
+      }
+
+    else
+      {
+         switch (glove_locked) 
+         {
+          case true:
+            Serial.println("unlocking ");
+            glove_locked = false;
+            break;
+          case false: 
+            Serial.println("locking ");
+            glove_locked = true;
+            break;
+          }
+    
+      }
+
+    change_motor(glove_locked);
 
        //sends command to lock the glove locks the glove
   }
 
+
    //locks the position of the fingers and will not update it until the force sensor reads correctly 
-  if (glove_locked == true){
-      if (force_sensor_value()>10){
-              bluetooth.println(frozen_position);
+  if (glove_locked == true)
+    {
+      float finger_force = force_sensor_value();
+      if (finger_force >10.0)
+        {
+          bluetooth.println(frozen_position);
+          Serial.print("pos frozen: ");
+          Serial.print(frozen_position);
+          Serial.print(" force: ");
+          Serial.println(finger_force);
         }
       // if your not puhing on the force sensor then it will begin updating as normal
-      else {
-          glove_locked == false; 
-          bluetooth.println(pot_data());
+      else if (finger_force <10.0)
+        {
+          position_pot= (pot_data()-cal.bottom)/(cal.top-cal.bottom);
+          Serial.print("pos locked: ");
+          Serial.println(position_pot);
+          bluetooth.println(position_pot);
         }
+
     }
    //sends the position of the fingers through bluetooth as freewheeling
-   else{
-       bluetooth.println(pot_data());
+   else
+   {
+        position_pot= (pot_data()-cal.bottom)/(cal.top-cal.bottom);
+        bluetooth.println(position_pot);
     }
-   delay(10);
+   frozen_position =  position_pot; 
+   delay(50);
 
 }
