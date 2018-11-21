@@ -15,8 +15,10 @@ MyRead = pyxinput.rController(1) # For Controller 1
 inp ="a"
 capslock_state_previous = 0
 count = 1
+
 while(True):
     try:
+
         # Read serial data
         s = ser.readline()
         q = s.decode("utf-8")
@@ -25,28 +27,25 @@ while(True):
             if thumb < 0.0:
                 thumb = 0.0
             elif thumb > 1.0:
-                thumb = 0.0
-            print(((thumb/4)+.75))
+                thumb = 1.0
+            #print(((thumb/4)+.75))
 
             MyVirtual.set_value('AxisLy', ((thumb/4)+.75)*-1)
             #print(MyRead.gamepad)
         # checks to see if the current capslock state is duplicated
         capslock_state = GetKeyState(VK_CAPITAL)
-
         if capslock_state != capslock_state_previous and capslock_state >= 0:
-            # print("sending")
-            # print(capslock_state)
-            ser.write(struct.pack('>B',capslock_state))
-            time.sleep(1)
-            J = ser.readline()
-            #count += 1
-            # print("rec")
-            # print(J)
-        elif count == 2 and capslock_state == capslock_state_previous and capslock_state >= 0:
-            ser.write(struct.pack('>B',capslock_state))
-            time.sleep(1)
-            count = 1
+            print("sending")
+            print(capslock_state)
+            if capslock_state == 1:
+                ser.write("1".encode())
+            elif capslock_state == 0:
+                ser.write("0".encode())
+            # time.sleep(1)
+            # J = ser.readline()
         capslock_state_previous = capslock_state
+
+
     # Allow program to be manually stopped
     except KeyboardInterrupt:
         print("Keyboard Interrupt")
