@@ -38,7 +38,7 @@ namespace NewtonVR
                 rot.Set(didget2.transform.localEulerAngles.x, orig - (roundedThumb * 360.0f), didget2.transform.localEulerAngles.z);
                 didget2.transform.localEulerAngles = rot;
             }
-
+            /*
             else if (roundedThumb >= -0.1f || roundedThumb <= 0.1f)
             {
                 print("bye ");
@@ -48,7 +48,7 @@ namespace NewtonVR
                 var rot = didget2.transform.localRotation.eulerAngles;
                 rot.Set(didget2.transform.localEulerAngles.x, orig, didget2.transform.localEulerAngles.z);
                 didget2.transform.localEulerAngles = rot;
-            }
+            }*/
 
             /* old values from when the vive controller was used instead of a game controller
             if (touchpadInput.IsTouched)

@@ -53,7 +53,7 @@ public class pickup : MonoBehaviour {
     void Update()
     {   
 
-        thumb=new bool[6] ;
+        thumb=new bool[10] ;
         index = new bool[10];
 
 
@@ -66,6 +66,10 @@ public class pickup : MonoBehaviour {
         thumb[4] = GameObject.Find("thumb back2").GetComponent<handcollide_thumb>().upcol;
         thumb[5] = GameObject.Find("thumb back3").GetComponent<handcollide_thumb>().upcol;
 
+        thumb[6] = GameObject.Find("thumb tip1 (1)").GetComponent<handcollide_thumb>().upcol;
+        thumb[7] = GameObject.Find("thumb tip1 (2)").GetComponent<handcollide_thumb>().upcol;
+        thumb[8] = GameObject.Find("thumb tip1 (3)").GetComponent<handcollide_thumb>().upcol;
+        thumb[9] = GameObject.Find("thumb tip1 (4)").GetComponent<handcollide_thumb>().upcol;
         // looks at the boolean from index collider
 
         index[0] = GameObject.Find("just the tip1").GetComponent<Handcolide>().downcol;
@@ -136,6 +140,7 @@ public class pickup : MonoBehaviour {
                     }
                     break;
                 }
+
         }
  
         int total_index_false = 0;
