@@ -12,8 +12,15 @@
  Motor 
  
  */
+#include "HX711.h"
 
-#define AHRS true         // Set to false for basic data read
+#define DOUT  4
+#define CLK  5
+
+HX711 scale(DOUT, CLK);
+
+float calibration_factor = -1958240; //-7050 worked for my 440lb max scale setup-208240
+
 #include <SoftwareSerial.h>
 #include <PWMServo.h>
 PWMServo myservo;  // create servo object to control a servo
@@ -31,10 +38,6 @@ float value = 0.5;
 
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
-// Pin definitions
-const int FSR_PIN = A0; // Pin connected to FSR/resistor divider
-const float VCC = 4.98; // Measured voltage of Ardunio 5V line
-const float R_DIV = 3230.0; // Measured resistance of 3.3k resistor
 
 void setup()
 {
@@ -52,37 +55,19 @@ void setup()
   bluetooth.println("U,9600,N");  // Temporarily Change the baudrate to 9600, no parity
   bluetooth.begin(9600);  // Start bluetooth serial at 9600
 
-  // input pin for the forse sensor
-  pinMode(FSR_PIN, INPUT);
-
+  // activates strain gague and resets it to zero
+  scale.set_scale();
+  scale.tare(); 
+  
+  //Get a baseline reading
+  long zero_factor = scale.read_average();
 }
 
 //checks the force on the force sensor and returns the result
 float force_sensor_value(){
-
-    int fsrADC = analogRead(FSR_PIN);
-    if (fsrADC != 0) // If the analog reading is non-zero
-    {
-      // Use ADC reading to calculate voltage:
-      float fsrV = fsrADC * VCC / 1023.0;
-      // Use voltage and static resistor value to
-      // calculate FSR resistance:
-      float fsrR = R_DIV * (VCC / fsrV - 1.0);
-      // Guesstimate force based on slopes in figure 3 of
-      // FSR datasheet:
-      float force;
-      float fsrG = 1.0 / fsrR; // Calculate conductance
-      // Break parabolic curve down into two linear slopes:
-      if (fsrR <= 600)
-        force = (fsrG - 0.00075) / 0.00000032639;
-      else
-        force =  fsrG / 0.000000642857;
-      return force;
-    }
-    else{
-
-      return 0;
-      }
+        scale.set_scale(calibration_factor); //Adjust to this calibration factor
+        float force_value = (scale.get_units(), 3);
+        return force_value; 
 }
 
 // read the value from the sensor
@@ -142,7 +127,7 @@ float position_pot;
 void loop()
 {
     if (start == true){  
-      cal =calibrate();   
+      //cal =calibrate();   
       Serial.println(cal.bottom); 
       Serial.println(cal.top);  
       start =false; 
@@ -193,7 +178,7 @@ void loop()
   if (glove_locked == true)
     {
       float finger_force = force_sensor_value();
-      if (finger_force >10.0)
+      if (finger_force >1.0)
         {
           bluetooth.println(frozen_position);
           Serial.print("pos frozen: ");
@@ -202,7 +187,7 @@ void loop()
           Serial.println(finger_force);
         }
       // if your not puhing on the force sensor then it will begin updating as normal
-      else if (finger_force <10.0)
+      else if (finger_force <1.0)
         {
           position_pot= (pot_data()-cal.bottom)/(cal.top-cal.bottom);
           Serial.print("pos locked: ");
