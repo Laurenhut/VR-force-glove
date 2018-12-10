@@ -42,7 +42,7 @@ SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 void setup()
 {
   myservo.attach(SERVO_PIN_A);  // attaches the servo on pin 9 to the servo object
-  myservo.write(45);
+  myservo.write(120);
  
   Serial.begin(9600);
 
@@ -66,7 +66,9 @@ void setup()
 //checks the force on the force sensor and returns the result
 float force_sensor_value(){
         scale.set_scale(calibration_factor); //Adjust to this calibration factor
-        float force_value = (scale.get_units(), 3);
+        float  force_value= scale.get_units();
+      Serial.print("ff"); 
+      Serial.println(force_value);
         return force_value; 
 }
 
@@ -80,15 +82,15 @@ float pot_data()
 
 void  change_motor(int current_position)
 {
-      // freewheeling position
+     //locked position
      if (current_position == true)
      {
-        myservo.write(110);
+        myservo.write(150);
       }
-     //locked position
+      // freewheeling position
      else
      {
-        myservo.write(45);
+        myservo.write(120);
 
       }
 
@@ -127,7 +129,7 @@ float position_pot;
 void loop()
 {
     if (start == true){  
-      //cal =calibrate();   
+      cal =calibrate();   
       Serial.println(cal.bottom); 
       Serial.println(cal.top);  
       start =false; 
