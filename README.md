@@ -33,12 +33,12 @@ assembling the glove
 9. place a small piece of glue or tape onto the ratchet_cap to lock it into place on the ratchet_case
 10. slide the control rod into the hole on the end of the control_lever and the hole on the end of the hobby servo horn.
 11. place the hobby servo into the
-10. place the index_ring_adapter over the linear slide carriage and attach using m2 screws
-11. test to make sure the index_ring_adapter and slide are working correctly
+12. place the index_ring_adapter over the linear slide carriage and attach using m2 screws
+13. test to make sure the index_ring_adapter and slide are working correctly
   - note: you may have to angle the linear slide slightly to make finger actuation more comfortable
-12. screw the puck_mount onto the vive puck
-13. place the puck_mount onto the back of the handle piece
-14. slide the stabilization rods into the holes of the puck_mount. and place the caps over the rods to make sure they don't slide out
+14. screw the puck_mount onto the vive puck
+15. place the puck_mount onto the back of the handle piece
+16. slide the stabilization rods into the holes of the puck_mount. and place the caps over the rods to make sure they don't slide out
 
 Running the software
 ---
