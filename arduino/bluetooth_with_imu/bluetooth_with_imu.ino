@@ -42,7 +42,7 @@ SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 void setup()
 {
   myservo.attach(SERVO_PIN_A);  // attaches the servo on pin 9 to the servo object
-  myservo.write(120);
+  myservo.write(105);
  
   Serial.begin(9600);
 
@@ -61,6 +61,7 @@ void setup()
   
   //Get a baseline reading
   long zero_factor = scale.read_average();
+  myservo.write(105);
 }
 
 //checks the force on the force sensor and returns the result
@@ -85,12 +86,12 @@ void  change_motor(int current_position)
      //locked position
      if (current_position == true)
      {
-        myservo.write(150);
+        myservo.write(180);
       }
       // freewheeling position
      else
      {
-        myservo.write(120);
+        myservo.write(105);
 
       }
 
@@ -180,7 +181,7 @@ void loop()
   if (glove_locked == true)
     {
       float finger_force = force_sensor_value();
-      if (finger_force >1.0)
+      if (finger_force >1.05)
         {
           bluetooth.println(frozen_position);
           Serial.print("pos frozen: ");
@@ -189,7 +190,7 @@ void loop()
           Serial.println(finger_force);
         }
       // if your not puhing on the force sensor then it will begin updating as normal
-      else if (finger_force <1.0)
+      else if (finger_force <1.05)
         {
           position_pot= (pot_data()-cal.bottom)/(cal.top-cal.bottom);
           Serial.print("pos locked: ");
