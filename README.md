@@ -15,7 +15,7 @@ setup and use guide
 * blue smirf silver Bluetooth module
 * potentiometor
 * m2 and m5 screws
-* linear slide and carriage
+* at least 3in long guide rail and 17mm Ball bearing carriage
 * 20 gauge galvanized steel wire or 3in control rod
 
 assembling the glove
