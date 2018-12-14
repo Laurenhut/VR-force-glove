@@ -30,8 +30,8 @@ assembling the glove
 3. place the control_lever over the ratchet head and make sure that the lever is facing upwards and can swing clockwise
   - if the ratchet is in the incorrect orientation return to step 3 and reorient it
 
-<img src="./images/build_walkthrough/wt_4.jpg" width="370" style="margin-left:auto; margin-right:auto;"/>
-<img src="./images/build_walkthrough/wt_5.jpg" width="370" style="margin-left:auto; margin-right:auto;"/>
+<img src="./images/build_walkthrough/wt_4.jpg" width="370" />
+<img src="./images/build_walkthrough/wt_5.jpg" width="370" />
 
 4. put the control_lever through the center hole of the ratchet_cap
 5. place the potentiometor into the pot_casing piece and put the knob of the potentiometor into the ratchet_cap piece
@@ -83,6 +83,9 @@ Running the software
 Package references
 ---
 T. (n.d.). NewtonVR. Retrieved from https://github.com/TomorrowTodayLabs/NewtonVR
+
 B. (n.d.). PYXInput. Retrieved from https://github.com/bayangan1991/PYXInput
+
 M. (n.d.). Pywn32. Retrieved from https://github.com/mhammond/pywin32
+
 V. (n.d.). Steamvr_unity_plugin. Retrieved from https://github.com/ValveSoftware/steamvr_unity_plugin/tree/master/Assets/SteamVR
