@@ -100,6 +100,7 @@ void  change_motor(int current_position)
 struct Data
   {
     int bottom, top; 
+    float locked_force,squeeze_force;
   };
 
 struct Data calibrate()
@@ -107,6 +108,7 @@ struct Data calibrate()
     int var =0;
     int var2 = 0; 
     int bottom, top; 
+    float locked_force, squeeze_force; 
      
     Serial.println("calibrating hold at bottom for 5s");
            delay(5000); 
@@ -117,8 +119,23 @@ struct Data calibrate()
     delay(5000); 
     
     top = pot_data(); 
+    Serial.println("place finger in the middle");
+    delay(5000);
+    
+    Serial.println("locking device, relax fingers");
+    myservo.write(180);
+    delay(5000);
+    locked_force = force_sensor_value(); 
+    
+    Serial.println("squeeze device");
+    delay(5000);
+    squeeze_force = force_sensor_value(); 
+
+    Serial.println("unlocking device");
+    myservo.write(105);
+    
     Serial.println("done calibrating");
-    return {bottom, top};
+    return {bottom, top,locked_force,squeeze_force};
   }
 
 bool glove_locked = false;
@@ -133,6 +150,8 @@ void loop()
       cal =calibrate();   
       Serial.println(cal.bottom); 
       Serial.println(cal.top);  
+      Serial.println(cal.locked_force); 
+      Serial.println(cal.squeeze_force); 
       start =false; 
     }
    
@@ -181,7 +200,7 @@ void loop()
   if (glove_locked == true)
     {
       float finger_force = force_sensor_value();
-      if (finger_force >1.05)
+      if (finger_force >(cal.locked_force+.03))
         {
           bluetooth.println(frozen_position);
           Serial.print("pos frozen: ");
@@ -190,7 +209,7 @@ void loop()
           Serial.println(finger_force);
         }
       // if your not puhing on the force sensor then it will begin updating as normal
-      else if (finger_force <1.05)
+      else if (finger_force <(cal.locked_force+.03) )
         {
           position_pot= (pot_data()-cal.bottom)/(cal.top-cal.bottom);
           Serial.print("pos locked: ");

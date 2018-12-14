@@ -23,7 +23,7 @@ void setup() {
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object
   pinMode(rightbuttonpin,INPUT);
   pinMode(leftbuttonpin,INPUT);
-  myservo.write(125); 
+  myservo.write(105); 
  //myservo.write(170); 
 }
 
