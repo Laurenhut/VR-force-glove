@@ -68,7 +68,7 @@ assembling the glove
 
 Running the software
 ---
-1. assemble the circuit shown in diagram 1
+1. assemble the circuit shown in the circuit folder
 2. upload the " bluetooth_with_imu" sketch to the Arduino nano and open the serial monitor
 3. follow the steps for calibration
   - note: the bottom number should be smaller than the top number. If these values are reversed check your potentiometor
