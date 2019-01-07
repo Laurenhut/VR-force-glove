@@ -119,6 +119,7 @@
     <Compile Include="Assets\Scripts\buttonvalueIndex.cs" />
     <Compile Include="Assets\Scripts\buttonvaluesthumb.cs" />
     <Compile Include="Assets\Scripts\Controller.cs" />
+    <Compile Include="Assets\Scripts\force_bar.cs" />
     <Compile Include="Assets\Scripts\gripping.cs" />
     <Compile Include="Assets\Scripts\Hand.cs" />
     <Compile Include="Assets\Scripts\HandAnimation.cs" />
